@@ -6,6 +6,7 @@ class EpsilonDecaySchedule:
     Computes the value of epsilon at a given episode, according to the following formula:
     epsilon = final_value + (initial_value - final_value) * exp(-decay_coefficient * episode)
     """
+
     def __init__(
         self,
         initial_value: float,
@@ -23,8 +24,9 @@ class EpsilonDecaySchedule:
         self.initial_value = initial_value
         self.final_value = final_value
         self.decay_coefficient = decay_coefficient
-    
+
     def __call__(self, episode: int) -> float:
         range_ = self.initial_value - self.final_value
-        return self.final_value + range_ * math.exp(-1. * self.decay_coefficient * episode)
-    
+        return self.final_value + range_ * math.exp(
+            -1.0 * self.decay_coefficient * episode
+        )

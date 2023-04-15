@@ -1,13 +1,14 @@
-from typing import NamedTuple, List, Callable
 from dataclasses import dataclass
+from typing import Callable, List, NamedTuple
 
 import torch
 
 
 class Transition(NamedTuple):
-    """A transition is a tuple containing the 
+    """A transition is a tuple containing the
     state, action, reward and next state of an agent's interaction with the environment.
     """
+
     state: torch.FloatTensor
     action: torch.LongTensor
     reward: torch.FloatTensor
@@ -20,7 +21,7 @@ class Transition(NamedTuple):
             tuple: a tuple containing the state, action, reward and next state of the transition.
         """
         return self.state, self.action, self.reward, self.next_state
-    
+
     def as_dict(self) -> dict:
         """Returns the transition as a dictionary.
 
@@ -34,7 +35,9 @@ class Transition(NamedTuple):
 class TransitionBatch:
     transitions: List[Transition]
 
-    def states_batch(self, filter_fn: Callable[[Transition], bool]) -> torch.FloatTensor:
+    def states_batch(
+        self, filter_fn: Callable[[Transition], bool]
+    ) -> torch.FloatTensor:
         """Returns a tensor batch of states from the transitions.
 
         Args:
@@ -45,8 +48,10 @@ class TransitionBatch:
             torch.FloatTensor: a tensor batch of states, with shape (batch_size, state_size)
         """
         return torch.stack([t.state for t in self.transitions if filter_fn(t)])
-    
-    def actions_batch(self, filter_fn: Callable[[Transition], bool]) -> torch.LongTensor:
+
+    def actions_batch(
+        self, filter_fn: Callable[[Transition], bool]
+    ) -> torch.LongTensor:
         """Returns a tensor batch of actions from the transitions.
 
         Args:
@@ -57,8 +62,10 @@ class TransitionBatch:
             torch.LongTensor: a tensor batch of actions, with shape (batch_size, action_size)
         """
         return torch.stack([t.action for t in self.transitions if filter_fn(t)])
-    
-    def rewards_batch(self, filter_fn: Callable[[Transition], bool]) -> torch.FloatTensor:
+
+    def rewards_batch(
+        self, filter_fn: Callable[[Transition], bool]
+    ) -> torch.FloatTensor:
         """Returns a tensor batch of rewards from the transitions.
 
         Args:
@@ -69,8 +76,10 @@ class TransitionBatch:
             torch.FloatTensor: a tensor batch of rewards, with shape (batch_size, 1)
         """
         return torch.stack([t.reward for t in self.transitions if filter_fn(t)])
-    
-    def next_states_batch(self, filter_fn: Callable[[Transition], bool]) -> torch.FloatTensor:
+
+    def next_states_batch(
+        self, filter_fn: Callable[[Transition], bool]
+    ) -> torch.FloatTensor:
         """Returns a tensor batch of next states from the transitions.
 
         Args:
@@ -81,4 +90,3 @@ class TransitionBatch:
             torch.FloatTensor: a tensor batch of next states, with shape (batch_size, state_size)
         """
         return torch.stack([t.next_state for t in self.transitions if filter_fn(t)])
-

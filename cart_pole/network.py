@@ -1,18 +1,18 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 import torch
 from torch import nn
 
 
 class DQN(nn.Module):
-    """Deep Q Network.
-    """
+    """Deep Q Network."""
+
     def __init__(
-        self, 
-        n_observations: int, 
+        self,
+        n_observations: int,
         n_actions: int,
         hidden_size: int = 128,
-        hidden_activation: nn.Module = nn.ReLU()
+        hidden_activation: nn.Module = nn.ReLU(),
     ):
         """Initialize the DQN.
 
@@ -43,7 +43,7 @@ class DQN(nn.Module):
         x = self.hidden_activation(self.layer1(x))
         x = self.hidden_activation(self.layer2(x))
         return self.layer3(x)
-    
+
     def config(self) -> Dict[str, Any]:
         """Returns the configuration of the DQN.
 
@@ -53,5 +53,5 @@ class DQN(nn.Module):
         return {
             "hidden_size": self.hidden_size,
             "n_hidden_layers": 1,
-            "hidden_activation": self.hidden_activation.__class__.__name__
+            "hidden_activation": self.hidden_activation.__class__.__name__,
         }

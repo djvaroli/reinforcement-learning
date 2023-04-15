@@ -1,23 +1,21 @@
-from typing import Deque, List, Callable, Dict, Iterator, Optional
-from collections import deque
 import random
-from itertools import count
+from collections import deque
 from dataclasses import dataclass
+from itertools import count
+from typing import Callable, Deque, Dict, Iterator, List, Optional
 
+import gymnasium as gym
+import numpy as np
 import torch
+import tqdm
+from network import DQN
 from torch import nn
 from torch import optim as optim
-import numpy as np
-import gymnasium as gym
-import tqdm
-
 from transition import Transition
-from network import DQN
 
 
 @dataclass
 class CartPoleAgentConfig:
-
     env_name: str
     memory_size: int
     tau: float
@@ -28,12 +26,9 @@ class CartPoleAgentConfig:
 
 
 class ReplayMemory:
-    def __init__(
-        self, 
-        capacity: int
-    ) -> None:
+    def __init__(self, capacity: int) -> None:
         self.memory: Deque[Transition] = deque(list(), maxlen=capacity)
-    
+
     def push(self, transition: Transition) -> None:
         """Push a transition to the replay memory.
 
@@ -41,7 +36,7 @@ class ReplayMemory:
             transition (Transition): The transition to push.
         """
         self.memory.append(transition)
-    
+
     def sample(self, batch_size: int) -> List[Transition]:
         """Sample a batch of transitions from the replay memory.
 
@@ -55,10 +50,12 @@ class ReplayMemory:
             List[Transition]: A list of sampled transitions.
         """
         if batch_size > len(self.memory):
-            raise ValueError(f"Batch size ({batch_size}) is greater than the replay memory size ({len(self.memory)}).")
-        
+            raise ValueError(
+                f"Batch size ({batch_size}) is greater than the replay memory size ({len(self.memory)})."
+            )
+
         return random.sample(self.memory, batch_size)
-    
+
     def __len__(self) -> int:
         return len(self.memory)
 
@@ -71,7 +68,7 @@ class CartPoleAgent:
         tau: float = 0.005,
         gamma: float = 0.99,
         epsilon_schedule: Callable[[int], float] = lambda steps_done: 0.5,
-        gradient_ceiling: float = 100.0
+        gradient_ceiling: float = 100.0,
     ) -> None:
         """Initialize the CartPole agent.
 
@@ -80,7 +77,7 @@ class CartPoleAgent:
             dqn_hidden_size (int): The size of the hidden layers in the DQN. Defaults to 128.
             tau (float): The soft update parameter, which controls the rate at which the target network is updated. Defaults to 0.005.
             gamma (float): The discount factor, which controls the importance of future rewards. Defaults to 0.99.
-            epsilon_schedule (Callable[[int], float]): a callable that takes the number of steps done and returns the epsilon value. 
+            epsilon_schedule (Callable[[int], float]): a callable that takes the number of steps done and returns the epsilon value.
                 Defaults to lambda steps_done: 0.5.
             gradient_ceiling (float): Value to clip the gradients to. Defaults to 100.0.
         """
@@ -109,7 +106,7 @@ class CartPoleAgent:
         self.tau = tau
         self.gamma = gamma
         self.gradient_ceiling = gradient_ceiling
-    
+
     @property
     def config(self) -> CartPoleAgentConfig:
         return CartPoleAgentConfig(
@@ -119,9 +116,9 @@ class CartPoleAgent:
             tau=self.tau,
             gamma=self.gamma,
             epsilon_policy=self._epsilon_schedule,
-            gradient_ceiling=self.gradient_ceiling
+            gradient_ceiling=self.gradient_ceiling,
         )
-    
+
     @property
     def n_actions(self) -> int:
         return self.env.action_space.n
@@ -141,17 +138,17 @@ class CartPoleAgent:
             float: The epsilon threshold.
         """
         return self._epsilon_schedule(steps_done)
-    
+
     def select_action(self, state: torch.Tensor, epsilon: float) -> torch.LongTensor:
         """Select an action using the policy network or a random action depending
         on the epsilon threshold.
 
         Args:
             state (torch.Tensor): The current state of the environment.
-            epsilon (float): Value of threshold for epsilon-greedy policy. 
+            epsilon (float): Value of threshold for epsilon-greedy policy.
                 If a random number is greater than epsilon, the policy network is used to select the action.
                 Otherwise, a random action is selected from the replay memory.
-        
+
         Returns:
             torch.LongTensor: The action to take.
         """
@@ -165,14 +162,11 @@ class CartPoleAgent:
             return torch.tensor([[action_index]], dtype=torch.long)
 
     def policy_net_parameters(self) -> Iterator[nn.Parameter]:
-        """Returns the parameters of the policy network.
-        """
+        """Returns the parameters of the policy network."""
         return self.policy_net.parameters()
-    
+
     def init(
-        self, 
-        optimizer: optim.Optimizer, 
-        loss_fn: nn.Module = nn.SmoothL1Loss()
+        self, optimizer: optim.Optimizer, loss_fn: nn.Module = nn.SmoothL1Loss()
     ) -> "CartPoleAgent":
         """Initialize the agent, by setting the optimizer and loss function.
 
@@ -183,7 +177,7 @@ class CartPoleAgent:
         self.optimizer = optimizer
         self.loss_fn = loss_fn
         return self
-    
+
     def _update_target_net_weights(self, tau: float) -> None:
         """Update the target network weights using a soft update approach.
 
@@ -194,22 +188,24 @@ class CartPoleAgent:
         """
         if tau > 1.0 or tau < 0.0:
             raise ValueError("``tau`` must be in the range [0, 1].")
-        
+
         target_net_state_dict = self.target_net.state_dict()
         policy_net_state_dict = self.policy_net.state_dict()
 
         # target net weights are updated using a soft update approach
         # this helps to stabilize the training process
         for key in target_net_state_dict:
-            target_net_state_dict[key] = tau * policy_net_state_dict[key] + (1 - tau) * target_net_state_dict[key]
+            target_net_state_dict[key] = (
+                tau * policy_net_state_dict[key]
+                + (1 - tau) * target_net_state_dict[key]
+            )
 
         self.target_net.load_state_dict(target_net_state_dict)
 
     def _increment_steps_done(self) -> None:
-        """Increment the number of steps taken so far.
-        """
+        """Increment the number of steps taken so far."""
         self._steps_done += 1
-    
+
     def optimize_model(self, batch_size: int = 128) -> float:
         """Samples a batch of transitions from the replay memory and uses it to train the policy network.
 
@@ -232,15 +228,13 @@ class CartPoleAgent:
 
         # for final states V(s) = max_a Q(s, a) = 0 by definition
         non_final_mask = torch.tensor(
-            tuple(
-                map(lambda s: s is not None, training_batch.next_state)
-            ), 
-            dtype=torch.bool
+            tuple(map(lambda s: s is not None, training_batch.next_state)),
+            dtype=torch.bool,
         )
         non_final_next_states = torch.cat(
             [s for s in training_batch.next_state if s is not None]
         )
-        
+
         # sate_batch is a tensor of shape (batch_size, n_observations)
         state_batch = torch.cat(training_batch.state)
 
@@ -257,29 +251,37 @@ class CartPoleAgent:
         # computer the max_a(Q(s', a)) values for the next state
         # for final states V(s) = max_a Q(s, a) = 0 by definition
         with torch.no_grad():
-            next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0]
+            next_state_values[non_final_mask] = self.target_net(
+                non_final_next_states
+            ).max(1)[0]
 
         # recall that Q(s, a) = r + gamma * max_a' Q(s', a'
         expected_state_action_values = reward_batch + (next_state_values * self.gamma)
-        loss: torch.Tensor = self.loss_fn(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss: torch.Tensor = self.loss_fn(
+            state_action_values, expected_state_action_values.unsqueeze(1)
+        )
 
         # minimize Huber loss
         self.optimizer.zero_grad()
         loss.backward()
-        
+
         # clip gradients to prevent them from exploding
-        torch.nn.utils.clip_grad_value_(self.policy_net.parameters(), self.gradient_ceiling)
+        torch.nn.utils.clip_grad_value_(
+            self.policy_net.parameters(), self.gradient_ceiling
+        )
         self.optimizer.step()
 
         return loss.item()
-    
-    def train_episode(self,  batch_size: int, episode: Optional[int] = None) -> List[float]:
+
+    def train_episode(
+        self, batch_size: int, episode: Optional[int] = None
+    ) -> List[float]:
         """Trains the agent for a single episode.
 
         Args:
             batch_size (int): The size of the batch to sample from the replay memory.
             episode (Optional[int], optional): The episode number. Defaults to None.
-        
+
         Returns:
             List[float]: A list of the loss values computed during the episode.
         """
@@ -297,7 +299,7 @@ class CartPoleAgent:
 
             # take action and observe the next state and reward
             observation, reward, terminated, truncated, _ = self.env.step(action.item())
-            
+
             # convert reward to a tensor
             reward = torch.tensor([reward], dtype=torch.float32)
             done = terminated or truncated
@@ -318,7 +320,7 @@ class CartPoleAgent:
             if done:
                 self._episode_durations.append(t + 1)
                 break
-        
+
         return episode_loss_history
 
     def train(self, n_episodes: int, batch_size: int):
@@ -333,6 +335,7 @@ class CartPoleAgent:
             for episode in range(n_episodes):
                 self._loss_history[episode] = self.train_episode(batch_size, episode)
                 mean_episode_loss = np.mean(self._loss_history[episode])
-                progress_bar.set_postfix({f"{self.loss_fn.__class__.__name__}": round(mean_episode_loss, 4)})
+                progress_bar.set_postfix(
+                    {f"{self.loss_fn.__class__.__name__}": round(mean_episode_loss, 4)}
+                )
                 progress_bar.update(1)
-
