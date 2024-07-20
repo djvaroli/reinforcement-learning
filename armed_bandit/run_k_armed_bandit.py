@@ -67,7 +67,7 @@ def run_experiment(
     optimal_action_history = jnp.zeros((n_experiments,), dtype=int)
 
     with tqdm(range(n_experiments), total=n_experiments) as pbar:
-        for experiment in pbar:
+        for experiment in range(n_experiments):
             pbar.set_description(f"Run {experiment + 1}/{n_experiments}")
 
             # initialize the bandit. Automatically updates the random key such that
