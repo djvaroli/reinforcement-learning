@@ -150,10 +150,16 @@ if __name__ == "__main__":
     experiment_dir = Path(experiment_id).resolve()
     experiment_dir.mkdir(exist_ok=True)
 
+    start_time = time.perf_counter()
     run_experiment(
         args.n_arms, args.n_steps, args.n_runs, args.av_bias, experiment_dir, args.seed
     )
+    end_time = time.perf_counter()
+
+    config = vars(args)
+    config["experiment_id"] = experiment_id
+    config["execution_time"] = int(end_time - start_time)
 
     # save the launch configuration
     with open(f"{experiment_dir / 'launch_config.json'}", "w") as f:
-        json.dump(vars(args), f)
+        json.dump(config, f)
