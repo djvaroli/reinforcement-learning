@@ -18,7 +18,7 @@ sns.set_theme()
 def generate_experiment_id(length: int = 8) -> str:
     """Generates a random experiment ID."""
     exp_id = "".join(random.choices(string.ascii_lowercase + string.digits, k=length))
-    return f"epxeriment-{int(time.time())}-{exp_id}"
+    return f"experiment-{int(time.time())}-{exp_id}"
 
 
 def average_and_plot(
@@ -33,7 +33,7 @@ def average_and_plot(
 
     averaged_data = data.mean(axis=axis)
     data_std = data.std(axis=axis)
-    n_steps = data.shape[axis]
+    n_steps = data.shape[-1]
 
     figure = plt.figure(figsize=fig_size)
 
