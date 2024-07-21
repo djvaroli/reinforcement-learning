@@ -6,6 +6,9 @@ from .base import ActionSelection
 
 
 class GreeedyActionSelection(ActionSelection):
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
     def select(self, random_key: Array, est_action_values: Array) -> Array:
         val_max = jnp.max(est_action_values)
         ties = jnp.where(est_action_values == val_max)[0]
@@ -13,6 +16,9 @@ class GreeedyActionSelection(ActionSelection):
 
 
 class EpsilonGreedyActionSelection(ActionSelection):
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(epsilon={self.epsilon})"
+
     def __init__(self, epsilon: float):
         if not 0 <= epsilon <= 1:
             raise ValueError("Epsilon must be between 0 and 1.")
