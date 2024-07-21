@@ -3,3 +3,6 @@ __pycache__
 .DS_Store
 
 *experiment*
+
+# virtual environment files 
+*venv*
