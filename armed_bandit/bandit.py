@@ -2,6 +2,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from action.selection.base import ActionSelection
 from jax import Array
 from jax import numpy as jnp
 from jax import random as jrnd
@@ -13,6 +14,7 @@ class KArmedBandit:
     def __init__(
         self,
         n_actions: int,
+        action_selection_method: ActionSelection,
         init_action_val_bias: float = 0.0,
         random_seed: int | None = None,
     ):
@@ -30,6 +32,8 @@ class KArmedBandit:
         self._init_function = self._create_init_function(
             n_actions, init_action_val_bias
         )
+
+        self._action_selection_method = action_selection_method
 
         self._q_star: Array = ...
         self._Q_est: Array = ...
@@ -68,15 +72,11 @@ class KArmedBandit:
 
     @_update_random_key_decorator
     def _sample_action(self) -> Array:
-        max_value = jnp.max(self._Q_est)
-        tied_indices = jnp.where(self._Q_est == max_value)[0]
-        selected_action_index = jrnd.choice(self._random_key, tied_indices)
-
-        self._N = self._increment_array_at_index(
-            self._N, selected_action_index, amount=1
+        selected_action = self._action_selection_method.select(
+            self._random_key, self._Q_est
         )
-
-        return selected_action_index
+        self._N = self._increment_array_at_index(self._N, selected_action, 1)
+        return selected_action
 
     @_update_random_key_decorator
     def _sample_reward(self, action: int) -> Array:
