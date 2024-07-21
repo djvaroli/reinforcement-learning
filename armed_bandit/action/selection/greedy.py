@@ -15,7 +15,7 @@ class GreeedyActionSelection(ActionSelection):
         return jrnd.choice(random_key, ties)
 
 
-class EpsilonGreedyActionSelection(ActionSelection):
+class EpsilonGreedyActionSelection(GreeedyActionSelection):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(epsilon={self.epsilon})"
 
@@ -28,6 +28,7 @@ class EpsilonGreedyActionSelection(ActionSelection):
     def select(self, random_key: Array, est_action_values: Array) -> Array:
         # sample from a uniform distribution
         if jrnd.uniform(random_key, (1,)) < self.epsilon:
-            return jrnd.choice(random_key, est_action_values)
+            indices = jnp.arange(est_action_values.shape[0])
+            return jrnd.choice(random_key, indices)
 
         return super().select(random_key, est_action_values)
