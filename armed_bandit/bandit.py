@@ -73,7 +73,7 @@ class KArmedBandit:
     @_update_random_key_decorator
     def _sample_action(self) -> Array:
         selected_action = self._action_selection_method.select(
-            self._random_key, self._Q_est
+            self._random_key, self._Q_est, self._N
         )
         self._N = self._increment_array_at_index(self._N, selected_action, 1)
         return selected_action
