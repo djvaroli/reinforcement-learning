@@ -3,11 +3,10 @@
 # define the experiment launch commands
 
 declare -a launch_commands=(
-    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --av_bias 0"
-    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --av_bias 1"
-    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --av_bias 2"
-    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --av_bias 5"
-    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --av_bias 10"
+    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --action_selector GreeedyActionSelection()"
+    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --action_value_bias 5 --action_selector GreeedyActionSelection()"
+    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --action_selector EpsilonGreedyActionSelection(epsilon=0.01)"
+    "python3 run_k_armed_bandit.py -k 10 -n 1000 -r 2000 --action_selector EpsilonGreedyActionSelection(epsilon=0.1)"
 )
 
 # colors
