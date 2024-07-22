@@ -1,1 +1,2 @@
 from .greedy import EpsilonGreedyActionSelection, GreeedyActionSelection
+from .ucb import UpperConfidenceBoundSelection
