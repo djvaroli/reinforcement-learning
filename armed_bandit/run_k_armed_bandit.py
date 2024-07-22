@@ -6,7 +6,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import seaborn as sns
-from action.selection import EpsilonGreedyActionSelection, GreeedyActionSelection
 from bandit import KArmedBandit
 from jax import Array
 from jax import numpy as jnp
@@ -158,7 +157,9 @@ if __name__ == "__main__":
     experiment_dir = Path(experiment_id).resolve()
     experiment_dir.mkdir(exist_ok=True)
 
-    action_selection_method = eval(args.action_selector)
+    import action
+
+    action_selection_method = eval(f"action.selection." + args.action_selector)
     print(action_selection_method)
 
     bandit = KArmedBandit(
